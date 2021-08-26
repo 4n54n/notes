@@ -1,1 +1,11 @@
-
+connect to windows servers and replace damaged files : 
+      sfc/scannow
+      DISM /online /Cleanup-image
+      /CheckHealth
+      DISM /Online /Cleanup-Image /ScanHealth
+      DISM /Online /Cleanup-Image
+      /RestoreHealth
+      
+system restore :
+      run
+      rstrui.exe
